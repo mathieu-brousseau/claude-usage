@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="popup.css" />
+    <link rel="stylesheet" href="dashboard.css" />
+    <title>Claude Usage — dashboard</title>
+  </head>
+  <body class="dash">
+    <header class="topbar">
+      <div class="title">Claude&nbsp;<span class="brand-dim">usage</span></div>
+      <div class="topbar-actions">
+        <span id="updated" class="upd"></span>
+        <button id="refresh" class="icon-btn" title="Rafraichir" aria-label="Rafraichir">&#x21bb;</button>
+      </div>
+    </header>
+
+    <main id="app" class="app" aria-live="polite">
+      <div class="loading">Chargement&hellip;</div>
+    </main>
+
+    <footer class="dash-foot">
+      Données lues depuis ta session claude.ai · endpoint non documenté (peut changer).
+    </footer>
+
+    <script type="module" src="dashboard.js"></script>
+  </body>
+</html>

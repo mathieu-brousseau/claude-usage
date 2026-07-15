@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>Claude Usage</title>
+  </head>
+  <body>
+    <header class="bar">
+      <span class="brand">Claude&nbsp;<span class="brand-dim">usage</span></span>
+      <span class="bar-actions">
+        <button id="open-dash" class="icon-btn" title="Ouvrir le dashboard" aria-label="Dashboard">&#x2922;</button>
+        <button id="refresh" class="icon-btn" title="Rafraichir" aria-label="Rafraichir">&#x21bb;</button>
+      </span>
+    </header>
+
+    <main id="content" class="content" aria-live="polite">
+      <div class="loading">Chargement&hellip;</div>
+    </main>
+
+    <footer id="footer" class="foot"></footer>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

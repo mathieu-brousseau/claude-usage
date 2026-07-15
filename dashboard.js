@@ -180,6 +180,12 @@ function section(title, node) {
   sec.append(node);
   return sec;
 }
+function collapsible(title, node) {
+  const d = el("details", "collapsible");
+  d.append(el("summary", null, title));
+  d.append(node);
+  return d;
+}
 
 // ---------- rendu ----------
 function render(data, at) {
@@ -203,7 +209,7 @@ function render(data, at) {
   if (pools.length) {
     const cards = el("div", "cards");
     for (const p of pools) cards.append(poolCard(p));
-    app.append(section("Autres credits", cards));
+    app.append(collapsible("Autres credits", cards));
   }
 
   updated.textContent = `maj ${ago(at)}`;

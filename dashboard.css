@@ -108,6 +108,32 @@ h2 {
 .dot.on { background: var(--c); }
 .dot.off { background: var(--ink-2); opacity: 0.4; }
 
+/* --- Section repliable --- */
+.collapsible > summary {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+.collapsible > summary::-webkit-details-marker { display: none; }
+.collapsible > summary::before {
+  content: "\25b8";
+  font-size: 10px;
+  color: var(--ink-2);
+  transition: transform 0.15s ease;
+}
+@media (prefers-reduced-motion: reduce) { .collapsible > summary::before { transition: none; } }
+.collapsible[open] > summary::before { transform: rotate(90deg); }
+.collapsible > summary:focus-visible { outline: 2px solid var(--ink-1); outline-offset: 3px; border-radius: 4px; }
+.collapsible > .cards { margin-top: 14px; }
+
 .dash-foot {
   padding: 16px 24px;
   border-top: 1px solid var(--line);

@@ -1,4 +1,4 @@
-import { fetchUsage, normalize, sevClass, AuthError } from "./api.js";
+import { fetchAll, normalize, sevClass, AuthError } from "./api.js";
 
 const app = document.getElementById("app");
 const updated = document.getElementById("updated");
@@ -53,7 +53,6 @@ function gauge(spend) {
   const sev = spend.enabled ? sevClass(spend.pct) : "ok";
   const wrap = el("div", `gauge-wrap ${sev}`);
   const pct = spend.enabled ? Math.max(0, Math.min(spend.pct, 100)) : 0;
-
   const svg = svgEl("svg", { viewBox: "0 0 120 120", class: "gauge" });
   const common = { cx: 60, cy: 60, r: 50, fill: "none", "stroke-width": 11 };
   svg.append(svgEl("circle", { ...common, class: "track-ring" }));
@@ -68,7 +67,6 @@ function gauge(spend) {
     })
   );
   wrap.append(svg);
-
   const center = el("div", "gauge-center");
   center.append(el("div", "gauge-label", "Credits"));
   if (spend.enabled) {
@@ -187,32 +185,59 @@ function collapsible(title, node) {
   return d;
 }
 
-// ---------- rendu ----------
-function render(data, at) {
-  const { meters, spend } = normalize(data);
-  app.replaceChildren();
+function orgTitle(org) {
+  const t = el("div", "org-title");
+  t.append(el("span", null, org.name));
+  if (org.type) t.append(el("span", "org-type", org.type));
+  return t;
+}
 
-  const hero = el("section", "hero");
+function orgBlock(org, data) {
+  const block = el("div", "org-block");
+  block.append(orgTitle(org));
+
+  const { meters, spend } = normalize(data);
+  const hero = el("div", "hero");
   hero.append(gauge(spend));
   const hm = el("div", "hero-meters");
   for (const m of meters) hm.append(meterRow(m));
   hero.append(hm);
-  app.append(hero);
+  block.append(hero);
 
   if (Array.isArray(data.limits) && data.limits.length) {
     const cards = el("div", "cards");
     for (const l of data.limits) cards.append(limitCard(l));
-    app.append(section("Plafonds", cards));
+    block.append(section("Plafonds", cards));
   }
 
   const pools = poolCards(data, spend.currency || "USD");
   if (pools.length) {
     const cards = el("div", "cards");
     for (const p of pools) cards.append(poolCard(p));
-    app.append(collapsible("Autres credits", cards));
+    block.append(collapsible("Autres credits", cards));
   }
+  return block;
+}
 
-  updated.textContent = `maj ${ago(at)}`;
+function orgErrorBlock(org, err) {
+  const block = el("div", "org-block");
+  block.append(orgTitle(org));
+  block.append(el("div", "msg", `Erreur : ${err.message}`));
+  return block;
+}
+
+// ---------- rendu ----------
+function render(results) {
+  app.replaceChildren();
+  let latest = 0;
+  for (const r of results) {
+    if (r.error) app.append(orgErrorBlock(r.org, r.error));
+    else {
+      app.append(orgBlock(r.org, r.data));
+      if (r.at > latest) latest = r.at;
+    }
+  }
+  updated.textContent = latest ? `maj ${ago(latest)}` : "";
 }
 
 function renderAuth() {
@@ -234,8 +259,13 @@ function renderError(err) {
 async function load({ force = false } = {}) {
   refreshBtn.classList.add("spin");
   try {
-    const { data, at } = await fetchUsage({ force });
-    render(data, at);
+    const results = await fetchAll({ force });
+    if (!results.length) {
+      app.replaceChildren(el("div", "msg", "Aucune organisation trouvee."));
+      updated.textContent = "";
+    } else {
+      render(results);
+    }
   } catch (err) {
     if (err instanceof AuthError) renderAuth();
     else renderError(err);

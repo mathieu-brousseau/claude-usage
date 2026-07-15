@@ -1,4 +1,4 @@
-import { fetchUsage, worstPct } from "./api.js";
+import { fetchAll, worstPctAll } from "./api.js";
 
 const ALARM = "refresh";
 
@@ -10,11 +10,14 @@ function badgeColor(pct) {
 
 async function updateBadge() {
   try {
-    const { data } = await fetchUsage({ force: true });
-    const pct = Math.round(worstPct(data));
+    const results = await fetchAll({ force: true });
+    const pct = Math.round(worstPctAll(results));
     await chrome.action.setBadgeText({ text: String(pct) });
     await chrome.action.setBadgeBackgroundColor({ color: badgeColor(pct) });
-    await chrome.action.setTitle({ title: `Claude Usage — max ${pct}%` });
+    const n = results.length;
+    await chrome.action.setTitle({
+      title: `Claude Usage — max ${pct}%${n > 1 ? ` sur ${n} orgs` : ""}`,
+    });
   } catch {
     await chrome.action.setBadgeText({ text: "!" });
     await chrome.action.setBadgeBackgroundColor({ color: "#6b7a97" });

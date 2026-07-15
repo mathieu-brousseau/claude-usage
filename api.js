@@ -1,6 +1,7 @@
-// Logique partagee entre le popup et le service worker.
+// Logique partagee entre le popup, le dashboard et le service worker.
 // Appelle l'API claude.ai avec la session du navigateur (cookie envoye
 // automatiquement grace a host_permissions). Aucun token a manipuler.
+// Multi-org : enumere toutes les organisations du compte connecte.
 
 const BASE = "https://claude.ai/api";
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 min, comme l'appli officielle
@@ -13,37 +14,32 @@ export class AuthError extends Error {
   }
 }
 
-async function resolveOrgId() {
-  const stored = await chrome.storage.local.get("orgId");
-  if (stored.orgId) return stored.orgId;
-  try {
-    const r = await fetch(`${BASE}/organizations`, {
-      credentials: "include",
-      headers: { Accept: "application/json" },
-    });
-    if (r.ok) {
-      const list = await r.json();
-      if (Array.isArray(list) && list.length && list[0]?.uuid) {
-        return list[0].uuid;
-      }
-    }
-  } catch {
-    /* ignore */
-  }
-  return null;
+// Liste des organisations auxquelles le compte connecte a acces.
+export async function getOrgs() {
+  const r = await fetch(`${BASE}/organizations`, {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (r.status === 401 || r.status === 403) throw new AuthError(r.status);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const list = await r.json();
+  if (!Array.isArray(list)) return [];
+  return list
+    .filter((o) => o && o.uuid)
+    .map((o) => ({ uuid: o.uuid, name: o.name || "Organisation", type: o.raven_type || null }));
 }
 
-// Recupere l'usage. { force:true } ignore le cache.
-export async function fetchUsage({ force = false } = {}) {
+// Usage d'une org (avec cache par org, TTL 5 min).
+export async function fetchUsage(orgId, { force = false } = {}) {
+  const uKey = `usage_${orgId}`;
+  const aKey = `usageAt_${orgId}`;
   if (!force) {
-    const c = await chrome.storage.local.get(["usage", "usageAt"]);
-    if (c.usage && c.usageAt && Date.now() - c.usageAt < CACHE_TTL_MS) {
-      return { data: c.usage, cached: true, at: c.usageAt };
+    const c = await chrome.storage.local.get([uKey, aKey]);
+    if (c[uKey] && c[aKey] && Date.now() - c[aKey] < CACHE_TTL_MS) {
+      return { data: c[uKey], at: c[aKey], cached: true };
     }
   }
-  const org = await resolveOrgId();
-  if (!org) throw new AuthError(0);
-  const r = await fetch(`${BASE}/organizations/${org}/usage`, {
+  const r = await fetch(`${BASE}/organizations/${orgId}/usage`, {
     credentials: "include",
     headers: { Accept: "application/json" },
   });
@@ -51,8 +47,25 @@ export async function fetchUsage({ force = false } = {}) {
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   const data = await r.json();
   const at = Date.now();
-  await chrome.storage.local.set({ usage: data, usageAt: at });
-  return { data, cached: false, at };
+  await chrome.storage.local.set({ [uKey]: data, [aKey]: at });
+  return { data, at, cached: false };
+}
+
+// Usage de TOUTES les orgs. Renvoie [{ org, data, at }] ou { org, error }.
+// Une erreur d'auth globale (pas connecte) est propagee.
+export async function fetchAll({ force = false } = {}) {
+  const orgs = await getOrgs();
+  const out = [];
+  for (const org of orgs) {
+    try {
+      const { data, at } = await fetchUsage(org.uuid, { force });
+      out.push({ org, data, at });
+    } catch (err) {
+      if (err instanceof AuthError) throw err;
+      out.push({ org, error: err });
+    }
+  }
+  return out;
 }
 
 export function sevClass(pct) {
@@ -92,7 +105,7 @@ function spendMeter(spend, extra) {
   return { enabled: false };
 }
 
-// Transforme le JSON brut en une forme simple pour l'affichage.
+// Transforme le JSON brut d'une org en une forme simple pour l'affichage.
 export function normalize(data) {
   const meters = [
     windowMeter("Session (5 h)", data.five_hour),
@@ -102,10 +115,16 @@ export function normalize(data) {
   return { meters, spend };
 }
 
-// Le pire pourcentage parmi les compteurs actifs (pour le badge).
 export function worstPct(data) {
   const { meters, spend } = normalize(data);
   const vals = meters.map((m) => m.pct);
   if (spend.enabled) vals.push(spend.pct);
   return vals.length ? Math.max(...vals) : 0;
+}
+
+// Le pire pourcentage toutes orgs confondues (pour le badge).
+export function worstPctAll(results) {
+  let w = 0;
+  for (const r of results) if (r && r.data) w = Math.max(w, worstPct(r.data));
+  return w;
 }

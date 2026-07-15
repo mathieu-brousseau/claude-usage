@@ -42,6 +42,20 @@ h2 {
   font-weight: 600;
 }
 
+/* --- Bloc par organisation --- */
+.org-block { display: flex; flex-direction: column; gap: 20px; }
+.org-title { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: 0.02em; }
+.org-type {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
 /* --- Hero : jauge + deux plafonds cles --- */
 .hero {
   display: grid;

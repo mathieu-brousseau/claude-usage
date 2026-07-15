@@ -1,5 +1,7 @@
 # Claude Usage — extension Chrome
 
+![Dashboard Claude Usage](docs/dashboard.png)
+
 Affiche ta consommation Claude directement dans Chrome :
 
 - **Session (5 h)** — % du plafond glissant sur 5 heures
@@ -24,9 +26,9 @@ Comme la requête part **depuis ton navigateur**, ton **cookie de session claude
 est envoyé automatiquement** (grâce à `host_permissions`). Aucun token, mot de passe
 ni cookie à copier-coller : il suffit d'être connecté à claude.ai dans Chrome.
 
-L'`orgId` est détecté automatiquement via `GET /api/organizations` (avec un identifiant
-de secours en dur dans `api.js` si la détection échoue). Le résultat est mis en cache
-5 minutes (comme l'appli officielle) pour ne pas marteler l'API.
+Toutes les **organisations** de ton compte sont détectées via `GET /api/organizations`,
+et l'usage est récupéré pour chacune — le dashboard affiche **un bloc par org**. Chaque
+réponse est mise en cache 5 minutes (comme l'appli officielle) pour ne pas marteler l'API.
 
 ## Installation (mode développeur)
 
@@ -59,10 +61,9 @@ L'endpoint `/usage` n'est **pas documenté** par Anthropic. Il peut changer ou d
 à une mise à jour. Si l'affichage casse, vérifie la structure de la réponse dans
 `chrome://extensions` → *Inspecter les vues : service worker / popup*.
 
-## Changer l'organisation manuellement
+## Multi-organisation
 
-Depuis la console du service worker ou du popup :
-
-```js
-chrome.storage.local.set({ orgId: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" });
-```
+Si ton compte appartient à plusieurs organisations (plusieurs équipes sur le même
+login), l'extension les affiche **toutes** — un bloc par org dans le dashboard, et le
+badge montre le pire pourcentage toutes orgs confondues. Un usage « perso » sur un
+**autre compte** n'apparaît pas ici : utilise un profil Chrome dédié pour cette session.

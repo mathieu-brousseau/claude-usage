@@ -1,4 +1,4 @@
-import { fetchAll, worstPctAll } from "./api.js";
+import { fetchAll, badgePct } from "./api.js";
 import { getSettings } from "./settings.js";
 
 const ALARM = "refresh";
@@ -16,13 +16,14 @@ async function setupAlarm() {
 
 async function updateBadge() {
   try {
+    const { badgeSource } = await getSettings();
     const results = await fetchAll();
-    const pct = Math.round(worstPctAll(results));
+    const pct = Math.round(badgePct(results, badgeSource));
     await chrome.action.setBadgeText({ text: String(pct) });
     await chrome.action.setBadgeBackgroundColor({ color: badgeColor(pct) });
     const n = results.length;
     await chrome.action.setTitle({
-      title: `Claude Usage — max ${pct}%${n > 1 ? ` / ${n} orgs` : ""}`,
+      title: `Claude Usage — ${badgeSource} ${pct}%${n > 1 ? ` / ${n} orgs` : ""}`,
     });
   } catch {
     await chrome.action.setBadgeText({ text: "!" });
@@ -40,10 +41,13 @@ chrome.runtime.onStartup.addListener(() => {
   updateBadge();
 });
 
-// Réagit au changement d'intervalle depuis les réglages.
+// Reagit aux changements de reglages.
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.refreshMinutes) {
+  if (area !== "local") return;
+  if (changes.refreshMinutes) {
     setupAlarm();
+    updateBadge();
+  } else if (changes.badgeSource) {
     updateBadge();
   }
 });

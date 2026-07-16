@@ -56,7 +56,8 @@ Pour recharger après modification : bouton ↻ sur la carte de l'extension dans
 
 - **Langue** : anglais par défaut, bascule **EN/FR** via le bouton de langue (popup et dashboard).
 - **Auto-refresh** : le badge **et** la page ouverte (popup/dashboard) se réactualisent à l'intervalle choisi (1 à 60 min, réglable en bas du dashboard).
-- **Dates de reset** : chaque plafond affiche la **date et l'heure** exactes de réinitialisation.
+- **Dates de reset** : chaque plafond affiche le **compte à rebours** `reset in HH:MM` (tooltip = date absolue `YYYY/MM/DD HH:mm`), qui tourne en direct.
+- **Badge** : choisis ce que montre l'icône — **session (défaut)**, pire plafond, semaine ou crédits — via le sélecteur en bas du dashboard.
 
 ## Confidentialité
 

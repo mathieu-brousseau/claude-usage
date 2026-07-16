@@ -35,6 +35,8 @@ export const STRINGS = {
     error: "Error",
     settings: "Settings",
     autoRefresh: "Auto-refresh (badge)",
+    badgeLabel: "Badge shows",
+    worst: "Worst limit",
     minutes: "min",
   },
   fr: {
@@ -69,6 +71,8 @@ export const STRINGS = {
     error: "Erreur",
     settings: "Paramètres",
     autoRefresh: "Rafraîchissement auto (badge)",
+    badgeLabel: "Le badge affiche",
+    worst: "Pire plafond",
     minutes: "min",
   },
 };

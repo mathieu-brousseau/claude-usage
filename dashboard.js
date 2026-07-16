@@ -1,6 +1,6 @@
 import { fetchAll, normalize, sevClass, AuthError } from "./api.js";
 import { makeT, fmtAgo, money, countdownHHMM, fmtAbs } from "./i18n.js";
-import { getSettings, setSetting, REFRESH_OPTIONS } from "./settings.js";
+import { getSettings, setSetting, REFRESH_OPTIONS, BADGE_SOURCES } from "./settings.js";
 
 const app = document.getElementById("app");
 const updated = document.getElementById("updated");
@@ -8,6 +8,8 @@ const refreshBtn = document.getElementById("refresh");
 const langBtn = document.getElementById("lang");
 const intervalSel = document.getElementById("interval");
 const lblAutoRefresh = document.getElementById("lbl-autorefresh");
+const badgeSel = document.getElementById("badge-source");
+const lblBadge = document.getElementById("lbl-badge");
 const footNote = document.getElementById("foot-note");
 
 const SVGNS = "http://www.w3.org/2000/svg";
@@ -307,6 +309,16 @@ async function init() {
     intervalSel.append(o);
   }
 
+  lblBadge.textContent = t("badgeLabel");
+  const badgeLabels = { session: t("session"), worst: t("worst"), week: t("week"), credits: t("usageCredits") };
+  badgeSel.replaceChildren();
+  for (const src of BADGE_SOURCES) {
+    const o = el("option", null, badgeLabels[src] || src);
+    o.value = src;
+    if (src === s.badgeSource) o.selected = true;
+    badgeSel.append(o);
+  }
+
   langBtn.addEventListener("click", async () => {
     await setSetting("lang", lang === "en" ? "fr" : "en");
     location.reload();
@@ -317,6 +329,7 @@ async function init() {
     setSetting("refreshMinutes", m);
     scheduleAutoRefresh(m);
   });
+  badgeSel.addEventListener("change", () => setSetting("badgeSource", badgeSel.value));
 
   setInterval(refreshDynamic, 1000);
   scheduleAutoRefresh(s.refreshMinutes);

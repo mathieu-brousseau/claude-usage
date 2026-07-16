@@ -111,9 +111,28 @@ export function worstPct(data) {
   return vals.length ? Math.max(...vals) : 0;
 }
 
-// Le pire pourcentage toutes orgs confondues (pour le badge).
-export function worstPctAll(results) {
+// % d'une metrique donnee pour une org.
+export function metricPct(data, source) {
+  const { meters, spend } = normalize(data);
+  const find = (k) => {
+    const m = meters.find((x) => x.key === k);
+    return m ? m.pct : 0;
+  };
+  switch (source) {
+    case "session":
+      return find("session");
+    case "week":
+      return find("week");
+    case "credits":
+      return spend.enabled ? spend.pct : 0;
+    default: // "worst"
+      return worstPct(data);
+  }
+}
+
+// Valeur du badge = max de la metrique choisie sur toutes les orgs.
+export function badgePct(results, source) {
   let w = 0;
-  for (const r of results) if (r && r.data) w = Math.max(w, worstPct(r.data));
+  for (const r of results) if (r && r.data) w = Math.max(w, metricPct(r.data, source));
   return w;
 }

@@ -4,7 +4,6 @@
 // Multi-org : enumere toutes les organisations du compte connecte.
 
 const BASE = "https://claude.ai/api";
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 min, comme l'appli officielle
 
 export class AuthError extends Error {
   constructor(code) {
@@ -29,16 +28,8 @@ export async function getOrgs() {
     .map((o) => ({ uuid: o.uuid, name: o.name || "Organisation", type: o.raven_type || null }));
 }
 
-// Usage d'une org (avec cache par org, TTL 5 min).
-export async function fetchUsage(orgId, { force = false } = {}) {
-  const uKey = `usage_${orgId}`;
-  const aKey = `usageAt_${orgId}`;
-  if (!force) {
-    const c = await chrome.storage.local.get([uKey, aKey]);
-    if (c[uKey] && c[aKey] && Date.now() - c[aKey] < CACHE_TTL_MS) {
-      return { data: c[uKey], at: c[aKey], cached: true };
-    }
-  }
+// Usage d'une org. Toujours frais (pas de cache : le refresh recharge la page).
+export async function fetchUsage(orgId) {
   const r = await fetch(`${BASE}/organizations/${orgId}/usage`, {
     credentials: "include",
     headers: { Accept: "application/json" },
@@ -46,19 +37,17 @@ export async function fetchUsage(orgId, { force = false } = {}) {
   if (r.status === 401 || r.status === 403) throw new AuthError(r.status);
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   const data = await r.json();
-  const at = Date.now();
-  await chrome.storage.local.set({ [uKey]: data, [aKey]: at });
-  return { data, at, cached: false };
+  return { data, at: Date.now() };
 }
 
 // Usage de TOUTES les orgs. Renvoie [{ org, data, at }] ou { org, error }.
 // Une erreur d'auth globale (pas connecte) est propagee.
-export async function fetchAll({ force = false } = {}) {
+export async function fetchAll() {
   const orgs = await getOrgs();
   const out = [];
   for (const org of orgs) {
     try {
-      const { data, at } = await fetchUsage(org.uuid, { force });
+      const { data, at } = await fetchUsage(org.uuid);
       out.push({ org, data, at });
     } catch (err) {
       if (err instanceof AuthError) throw err;
@@ -74,9 +63,9 @@ export function sevClass(pct) {
   return "ok";
 }
 
-function windowMeter(label, w) {
+function windowMeter(key, w) {
   if (!w) return null;
-  return { label, pct: Number(w.utilization) || 0, resetsAt: w.resets_at || null };
+  return { key, pct: Number(w.utilization) || 0, resetsAt: w.resets_at || null };
 }
 
 function spendMeter(spend, extra) {
@@ -108,8 +97,8 @@ function spendMeter(spend, extra) {
 // Transforme le JSON brut d'une org en une forme simple pour l'affichage.
 export function normalize(data) {
   const meters = [
-    windowMeter("Session (5 h)", data.five_hour),
-    windowMeter("Semaine", data.seven_day),
+    windowMeter("session", data.five_hour),
+    windowMeter("week", data.seven_day),
   ].filter(Boolean);
   const spend = spendMeter(data.spend, data.extra_usage);
   return { meters, spend };

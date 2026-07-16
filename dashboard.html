@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,17 +11,22 @@
     <header class="topbar">
       <div class="title">Claude&nbsp;<span class="brand-dim">usage</span></div>
       <div class="topbar-actions">
+        <button id="lang" class="icon-btn lang" aria-label="Language">EN</button>
         <span id="updated" class="upd"></span>
-        <button id="refresh" class="icon-btn" title="Rafraichir" aria-label="Rafraichir">&#x21bb;</button>
+        <button id="refresh" class="icon-btn" aria-label="Refresh">&#x21bb;</button>
       </div>
     </header>
 
     <main id="app" class="app" aria-live="polite">
-      <div class="loading">Chargement&hellip;</div>
+      <div class="loading">…</div>
     </main>
 
     <footer class="dash-foot">
-      Données lues depuis ta session claude.ai · endpoint non documenté (peut changer).
+      <div class="settings">
+        <label id="lbl-autorefresh" class="settings-lbl" for="interval"></label>
+        <select id="interval" class="select"></select>
+      </div>
+      <div id="foot-note" class="foot-note"></div>
     </footer>
 
     <script type="module" src="dashboard.js"></script>

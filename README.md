@@ -27,8 +27,9 @@ est envoyé automatiquement** (grâce à `host_permissions`). Aucun token, mot d
 ni cookie à copier-coller : il suffit d'être connecté à claude.ai dans Chrome.
 
 Toutes les **organisations** de ton compte sont détectées via `GET /api/organizations`,
-et l'usage est récupéré pour chacune — le dashboard affiche **un bloc par org**. Chaque
-réponse est mise en cache 5 minutes (comme l'appli officielle) pour ne pas marteler l'API.
+et l'usage est récupéré pour chacune — le dashboard affiche **un bloc par org**. Les
+données sont toujours lues **en direct** (le bouton ↻ recharge simplement la page, aucun
+cache). Seul le **badge** se rafraîchit en tâche de fond, à un **intervalle configurable**.
 
 ## Installation (mode développeur)
 
@@ -49,6 +50,12 @@ Pour recharger après modification : bouton ↻ sur la carte de l'extension dans
 | `dashboard.html` / `dashboard.css` / `dashboard.js` | Dashboard plein écran (jauge, plafonds) |
 | `background.js` | Service worker : rafraîchit le badge toutes les 5 min |
 | `icons/` | Icônes générées |
+
+## Langue & réglages
+
+- **Langue** : anglais par défaut, bascule **EN/FR** via le bouton de langue (popup et dashboard).
+- **Auto-refresh du badge** : intervalle réglable (1 à 60 min) en bas du dashboard.
+- **Dates de reset** : chaque plafond affiche la **date et l'heure** exactes de réinitialisation.
 
 ## Confidentialité
 

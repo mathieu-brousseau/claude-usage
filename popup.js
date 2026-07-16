@@ -1,37 +1,27 @@
 import { fetchAll, normalize, sevClass, AuthError } from "./api.js";
+import { makeT, fmtDateTime, fmtAgo, money } from "./i18n.js";
+import { getSettings, setSetting } from "./settings.js";
 
 const content = document.getElementById("content");
 const footer = document.getElementById("footer");
 const refreshBtn = document.getElementById("refresh");
+const langBtn = document.getElementById("lang");
+const openDashBtn = document.getElementById("open-dash");
 
-function money(v, currency) {
-  try {
-    return new Intl.NumberFormat(navigator.language, {
-      style: "currency",
-      currency,
-      currencyDisplay: "narrowSymbol",
-    }).format(v);
-  } catch {
-    return `$${v.toFixed(2)}`;
-  }
-}
-
-function resetLabel(iso) {
-  if (!iso) return "";
-  const ms = new Date(iso).getTime() - Date.now();
-  if (ms <= 0) return "reinitialise";
-  const min = Math.round(ms / 60000);
-  if (min < 60) return `reset ${min} min`;
-  const h = Math.round(min / 60);
-  if (h < 48) return `reset ${h} h`;
-  return `reset ${Math.round(h / 24)} j`;
-}
+let lang = "en";
+let t = makeT(lang);
 
 function el(tag, cls, text) {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
   if (text != null) n.textContent = text;
   return n;
+}
+
+function resetText(iso) {
+  if (!iso) return "";
+  if (new Date(iso).getTime() - Date.now() <= 0) return t("resetNow");
+  return `${t("resets")} ${fmtDateTime(iso, lang)}`;
 }
 
 function meterRow({ label, valueText, pct, sub }) {
@@ -61,18 +51,18 @@ function orgRows(data) {
   for (const m of meters) {
     frag.append(
       meterRow({
-        label: m.label,
+        label: t(m.key),
         valueText: `${Math.round(m.pct)}%`,
         pct: m.pct,
-        sub: { left: resetLabel(m.resetsAt), right: "" },
+        sub: { left: resetText(m.resetsAt), right: "" },
       })
     );
   }
   if (spend.enabled) {
     frag.append(
       meterRow({
-        label: "Credits d'usage",
-        valueText: `${money(spend.used, spend.currency)} / ${money(spend.limit, spend.currency)}`,
+        label: t("usageCredits"),
+        valueText: `${money(spend.used, spend.currency, lang)} / ${money(spend.limit, spend.currency, lang)}`,
         pct: spend.pct,
         sub: { left: `${spend.pct.toFixed(1)}%`, right: spend.currency },
       })
@@ -88,26 +78,22 @@ function render(results) {
   for (const r of results) {
     if (multi) content.append(el("div", "org-label", r.org.name));
     if (r.error) {
-      content.append(el("div", "msg-inline", `Erreur : ${r.error.message}`));
+      content.append(el("div", "msg-inline", `${t("error")} : ${r.error.message}`));
       continue;
     }
     content.append(orgRows(r.data));
     if (r.at > latest) latest = r.at;
   }
-  if (latest) {
-    const secs = Math.round((Date.now() - latest) / 1000);
-    const age = secs < 60 ? `${secs} s` : `${Math.round(secs / 60)} min`;
-    footer.textContent = `maj il y a ${age}${multi ? ` · ${results.length} orgs` : ""} · cache 5 min`;
-  } else {
-    footer.textContent = "";
-  }
+  footer.textContent = latest
+    ? `${t("updated")} ${fmtAgo(latest, lang)}${multi ? ` · ${t("orgs", { n: results.length })}` : ""}`
+    : "";
 }
 
 function renderAuth() {
   content.replaceChildren();
   const msg = el("div", "msg");
-  msg.append(el("div", null, "Pas connecte a claude.ai."));
-  const btn = el("button", "btn", "Ouvrir claude.ai");
+  msg.append(el("div", null, t("notSignedIn")));
+  const btn = el("button", "btn", t("openClaude"));
   btn.addEventListener("click", () => chrome.tabs.create({ url: "https://claude.ai" }));
   msg.append(btn);
   content.append(msg);
@@ -116,16 +102,16 @@ function renderAuth() {
 
 function renderError(err) {
   content.replaceChildren();
-  content.append(el("div", "msg", `Erreur : ${err.message}`));
+  content.append(el("div", "msg", `${t("error")} : ${err.message}`));
   footer.textContent = "";
 }
 
-async function load({ force = false } = {}) {
+async function load() {
   refreshBtn.classList.add("spin");
   try {
-    const results = await fetchAll({ force });
+    const results = await fetchAll();
     if (!results.length) {
-      content.replaceChildren(el("div", "msg", "Aucune organisation trouvee."));
+      content.replaceChildren(el("div", "msg", t("noOrg")));
       footer.textContent = "";
     } else {
       render(results);
@@ -138,8 +124,27 @@ async function load({ force = false } = {}) {
   }
 }
 
-refreshBtn.addEventListener("click", () => load({ force: true }));
-document.getElementById("open-dash").addEventListener("click", () =>
-  chrome.tabs.create({ url: chrome.runtime.getURL("dashboard.html") })
-);
-load();
+async function init() {
+  const s = await getSettings();
+  lang = s.lang;
+  t = makeT(lang);
+  document.documentElement.lang = lang;
+  refreshBtn.title = t("refresh");
+  openDashBtn.title = t("openDashboard");
+  langBtn.textContent = lang.toUpperCase();
+  langBtn.title = t("switchLang");
+  content.replaceChildren(el("div", "loading", t("loading")));
+
+  langBtn.addEventListener("click", async () => {
+    await setSetting("lang", lang === "en" ? "fr" : "en");
+    location.reload();
+  });
+  refreshBtn.addEventListener("click", () => location.reload());
+  openDashBtn.addEventListener("click", () =>
+    chrome.tabs.create({ url: chrome.runtime.getURL("dashboard.html") })
+  );
+
+  load();
+}
+
+init();

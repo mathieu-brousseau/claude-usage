@@ -66,6 +66,7 @@ body {
 .icon-btn:hover { background: var(--track); color: var(--ink); }
 .icon-btn:focus-visible { outline: 2px solid var(--ok); outline-offset: 2px; }
 .icon-btn.spin { animation: spin 0.7s linear infinite; }
+.icon-btn.lang { width: auto; padding: 0 8px; font-size: 11px; font-family: var(--mono); letter-spacing: 0.05em; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .icon-btn.spin { animation: none; } }
 

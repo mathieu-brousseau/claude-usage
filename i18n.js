@@ -25,7 +25,7 @@ export const STRINGS = {
     sev_normal: "ok",
     sev_warning: "warning",
     sev_critical: "critical",
-    resets: "resets",
+    resetsIn: "reset in",
     resetNow: "resetting",
     updated: "updated",
     orgs: "{n} orgs",
@@ -59,7 +59,7 @@ export const STRINGS = {
     sev_normal: "ok",
     sev_warning: "attention",
     sev_critical: "critique",
-    resets: "reset",
+    resetsIn: "reset dans",
     resetNow: "réinitialisé",
     updated: "maj",
     orgs: "{n} orgs",
@@ -82,20 +82,6 @@ export function makeT(lang) {
   };
 }
 
-export function fmtDateTime(iso, lang) {
-  if (!iso) return "";
-  try {
-    return new Intl.DateTimeFormat(LOCALES[lang] || "en-CA", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(iso));
-  } catch {
-    return iso;
-  }
-}
-
 export function fmtAgo(at, lang) {
   const s = Math.round((Date.now() - at) / 1000);
   const val = s < 60 ? `${s} s` : `${Math.round(s / 60)} min`;
@@ -112,4 +98,23 @@ export function money(v, currency, lang) {
   } catch {
     return `$${Number(v).toFixed(2)}`;
   }
+}
+
+// Temps restant jusqu'au reset, en HH:MM (les heures peuvent depasser 24).
+// { expired: true } si deja passe, sinon { text: "HH:MM" }.
+export function countdownHHMM(iso) {
+  if (!iso) return null;
+  const ms = new Date(iso).getTime() - Date.now();
+  if (ms <= 0) return { expired: true };
+  const totalMin = Math.floor(ms / 60000);
+  const p = (n) => String(n).padStart(2, "0");
+  return { expired: false, text: `${p(Math.floor(totalMin / 60))}:${p(totalMin % 60)}` };
+}
+
+// Date absolue locale au format YYYY/MM/DD HH:mm (pour le tooltip).
+export function fmtAbs(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }

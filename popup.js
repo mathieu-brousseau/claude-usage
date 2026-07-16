@@ -1,5 +1,5 @@
 import { fetchAll, normalize, sevClass, AuthError } from "./api.js";
-import { makeT, fmtDateTime, fmtAgo, money } from "./i18n.js";
+import { makeT, fmtAgo, money, countdownHHMM, fmtAbs } from "./i18n.js";
 import { getSettings, setSetting } from "./settings.js";
 
 const content = document.getElementById("content");
@@ -10,6 +10,8 @@ const openDashBtn = document.getElementById("open-dash");
 
 let lang = "en";
 let t = makeT(lang);
+let latestAt = 0;
+let orgCount = 0;
 
 function el(tag, cls, text) {
   const n = document.createElement(tag);
@@ -18,13 +20,30 @@ function el(tag, cls, text) {
   return n;
 }
 
-function resetText(iso) {
-  if (!iso) return "";
-  if (new Date(iso).getTime() - Date.now() <= 0) return t("resetNow");
-  return `${t("resets")} ${fmtDateTime(iso, lang)}`;
+function countdownText(iso) {
+  const c = countdownHHMM(iso);
+  if (!c) return "";
+  return c.expired ? t("resetNow") : `${t("resetsIn")} ${c.text}`;
 }
 
-function meterRow({ label, valueText, pct, sub }) {
+// Span de compte a rebours : texte HH:MM, tooltip = date absolue, data-reset pour le tick.
+function resetSpan(iso) {
+  const span = el("span", null, countdownText(iso));
+  if (iso) {
+    span.dataset.reset = iso;
+    span.title = fmtAbs(iso);
+  }
+  return span;
+}
+
+function meterSub(leftNode, rightText) {
+  const s = el("div", "meter-sub");
+  s.append(leftNode || el("span", null, ""));
+  s.append(el("span", null, rightText || ""));
+  return s;
+}
+
+function meterRow(label, valueText, pct, subNode) {
   const sev = sevClass(pct);
   const row = el("div", "meter");
   const head = el("div", "meter-head");
@@ -36,12 +55,7 @@ function meterRow({ label, valueText, pct, sub }) {
   fill.style.width = `${Math.min(pct, 100)}%`;
   track.append(fill);
   row.append(track);
-  if (sub) {
-    const s = el("div", "meter-sub");
-    s.append(el("span", null, sub.left || ""));
-    s.append(el("span", null, sub.right || ""));
-    row.append(s);
-  }
+  if (subNode) row.append(subNode);
   return row;
 }
 
@@ -49,23 +63,16 @@ function orgRows(data) {
   const frag = document.createDocumentFragment();
   const { meters, spend } = normalize(data);
   for (const m of meters) {
-    frag.append(
-      meterRow({
-        label: t(m.key),
-        valueText: `${Math.round(m.pct)}%`,
-        pct: m.pct,
-        sub: { left: resetText(m.resetsAt), right: "" },
-      })
-    );
+    frag.append(meterRow(t(m.key), `${Math.round(m.pct)}%`, m.pct, meterSub(resetSpan(m.resetsAt), "")));
   }
   if (spend.enabled) {
     frag.append(
-      meterRow({
-        label: t("usageCredits"),
-        valueText: `${money(spend.used, spend.currency, lang)} / ${money(spend.limit, spend.currency, lang)}`,
-        pct: spend.pct,
-        sub: { left: `${spend.pct.toFixed(1)}%`, right: spend.currency },
-      })
+      meterRow(
+        t("usageCredits"),
+        `${money(spend.used, spend.currency, lang)} / ${money(spend.limit, spend.currency, lang)}`,
+        spend.pct,
+        meterSub(el("span", null, `${spend.pct.toFixed(1)}%`), spend.currency)
+      )
     );
   }
   return frag;
@@ -74,7 +81,8 @@ function orgRows(data) {
 function render(results) {
   content.replaceChildren();
   const multi = results.length > 1;
-  let latest = 0;
+  latestAt = 0;
+  orgCount = results.length;
   for (const r of results) {
     if (multi) content.append(el("div", "org-label", r.org.name));
     if (r.error) {
@@ -82,15 +90,23 @@ function render(results) {
       continue;
     }
     content.append(orgRows(r.data));
-    if (r.at > latest) latest = r.at;
+    if (r.at > latestAt) latestAt = r.at;
   }
-  footer.textContent = latest
-    ? `${t("updated")} ${fmtAgo(latest, lang)}${multi ? ` · ${t("orgs", { n: results.length })}` : ""}`
+  refreshDynamic();
+}
+
+function refreshDynamic() {
+  for (const span of document.querySelectorAll("[data-reset]")) {
+    span.textContent = countdownText(span.dataset.reset);
+  }
+  footer.textContent = latestAt
+    ? `${t("updated")} ${fmtAgo(latestAt, lang)}${orgCount > 1 ? ` · ${t("orgs", { n: orgCount })}` : ""}`
     : "";
 }
 
 function renderAuth() {
   content.replaceChildren();
+  latestAt = 0;
   const msg = el("div", "msg");
   msg.append(el("div", null, t("notSignedIn")));
   const btn = el("button", "btn", t("openClaude"));
@@ -102,6 +118,7 @@ function renderAuth() {
 
 function renderError(err) {
   content.replaceChildren();
+  latestAt = 0;
   content.append(el("div", "msg", `${t("error")} : ${err.message}`));
   footer.textContent = "";
 }
@@ -111,6 +128,7 @@ async function load() {
   try {
     const results = await fetchAll();
     if (!results.length) {
+      latestAt = 0;
       content.replaceChildren(el("div", "msg", t("noOrg")));
       footer.textContent = "";
     } else {
@@ -144,6 +162,7 @@ async function init() {
     chrome.tabs.create({ url: chrome.runtime.getURL("dashboard.html") })
   );
 
+  setInterval(refreshDynamic, 1000);
   load();
 }
 

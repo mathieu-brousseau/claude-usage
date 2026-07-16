@@ -1,5 +1,5 @@
 import { fetchAll, normalize, sevClass, AuthError } from "./api.js";
-import { makeT, fmtDateTime, fmtAgo, money } from "./i18n.js";
+import { makeT, fmtAgo, money, countdownHHMM, fmtAbs } from "./i18n.js";
 import { getSettings, setSetting, REFRESH_OPTIONS } from "./settings.js";
 
 const app = document.getElementById("app");
@@ -13,6 +13,7 @@ const footNote = document.getElementById("foot-note");
 const SVGNS = "http://www.w3.org/2000/svg";
 let lang = "en";
 let t = makeT(lang);
+let latestAt = 0;
 
 // ---------- helpers ----------
 function el(tag, cls, text) {
@@ -26,13 +27,22 @@ function svgEl(tag, attrs) {
   for (const k in attrs) n.setAttribute(k, attrs[k]);
   return n;
 }
-function resetText(iso) {
-  if (!iso) return "";
-  if (new Date(iso).getTime() - Date.now() <= 0) return t("resetNow");
-  return `${t("resets")} ${fmtDateTime(iso, lang)}`;
-}
 function sevFromName(s) {
   return s === "critical" ? "crit" : s === "warning" ? "warn" : "ok";
+}
+function countdownText(iso) {
+  const c = countdownHHMM(iso);
+  if (!c) return "";
+  return c.expired ? t("resetNow") : `${t("resetsIn")} ${c.text}`;
+}
+// Span de compte a rebours : texte HH:MM, tooltip = date absolue, data-reset pour le tick.
+function resetSpan(iso) {
+  const span = el("span", null, countdownText(iso));
+  if (iso) {
+    span.dataset.reset = iso;
+    span.title = fmtAbs(iso);
+  }
+  return span;
 }
 
 // ---------- composants ----------
@@ -80,7 +90,7 @@ function meterRow(m) {
   track.append(fill);
   row.append(track);
   const sub = el("div", "meter-sub");
-  sub.append(el("span", null, resetText(m.resetsAt)));
+  sub.append(resetSpan(m.resetsAt));
   sub.append(el("span", null, ""));
   row.append(sub);
   return row;
@@ -112,7 +122,7 @@ function limitCard(l) {
   active.append(el("span", `dot ${l.is_active ? "on" : "off"}`));
   active.append(document.createTextNode(l.is_active ? t("active") : t("inactive")));
   sub.append(active);
-  sub.append(el("span", null, resetText(l.resets_at)));
+  sub.append(resetSpan(l.resets_at));
   card.append(sub);
   return card;
 }
@@ -153,7 +163,7 @@ function poolCard(p) {
   card.append(track);
   const sub = el("div", "card-sub");
   sub.append(el("span", null, `${p.pct.toFixed(1)}%`));
-  sub.append(el("span", null, resetText(p.resets_at)));
+  sub.append(resetSpan(p.resets_at));
   card.append(sub);
   return card;
 }
@@ -212,19 +222,27 @@ function orgErrorBlock(org, err) {
 // ---------- rendu ----------
 function render(results) {
   app.replaceChildren();
-  let latest = 0;
+  latestAt = 0;
   for (const r of results) {
     if (r.error) app.append(orgErrorBlock(r.org, r.error));
     else {
       app.append(orgBlock(r.org, r.data));
-      if (r.at > latest) latest = r.at;
+      if (r.at > latestAt) latestAt = r.at;
     }
   }
-  updated.textContent = latest ? `${t("updated")} ${fmtAgo(latest, lang)}` : "";
+  refreshDynamic();
+}
+
+function refreshDynamic() {
+  for (const span of document.querySelectorAll("[data-reset]")) {
+    span.textContent = countdownText(span.dataset.reset);
+  }
+  updated.textContent = latestAt ? `${t("updated")} ${fmtAgo(latestAt, lang)}` : "";
 }
 
 function renderAuth() {
   app.replaceChildren();
+  latestAt = 0;
   const msg = el("div", "msg");
   msg.append(el("div", null, t("notSignedIn")));
   const btn = el("button", "btn", t("openClaude"));
@@ -235,6 +253,7 @@ function renderAuth() {
 }
 function renderError(err) {
   app.replaceChildren();
+  latestAt = 0;
   app.append(el("div", "msg", `${t("error")} : ${err.message}`));
   updated.textContent = "";
 }
@@ -244,6 +263,7 @@ async function load() {
   try {
     const results = await fetchAll();
     if (!results.length) {
+      latestAt = 0;
       app.replaceChildren(el("div", "msg", t("noOrg")));
       updated.textContent = "";
     } else {
@@ -289,6 +309,7 @@ async function init() {
     setSetting("refreshMinutes", parseInt(intervalSel.value, 10))
   );
 
+  setInterval(refreshDynamic, 1000);
   load();
 }
 

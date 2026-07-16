@@ -12,6 +12,7 @@ let lang = "en";
 let t = makeT(lang);
 let latestAt = 0;
 let orgCount = 0;
+let dataTimer = null;
 
 function el(tag, cls, text) {
   const n = document.createElement(tag);
@@ -104,6 +105,12 @@ function refreshDynamic() {
     : "";
 }
 
+// Re-recupere les donnees a l'intervalle choisi (popup laisse ouvert).
+function scheduleAutoRefresh(minutes) {
+  if (dataTimer) clearInterval(dataTimer);
+  dataTimer = setInterval(load, Math.max(1, minutes) * 60 * 1000);
+}
+
 function renderAuth() {
   content.replaceChildren();
   latestAt = 0;
@@ -163,6 +170,7 @@ async function init() {
   );
 
   setInterval(refreshDynamic, 1000);
+  scheduleAutoRefresh(s.refreshMinutes);
   load();
 }
 

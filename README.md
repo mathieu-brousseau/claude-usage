@@ -29,7 +29,8 @@ ni cookie à copier-coller : il suffit d'être connecté à claude.ai dans Chrom
 Toutes les **organisations** de ton compte sont détectées via `GET /api/organizations`,
 et l'usage est récupéré pour chacune — le dashboard affiche **un bloc par org**. Les
 données sont toujours lues **en direct** (le bouton ↻ recharge simplement la page, aucun
-cache). Seul le **badge** se rafraîchit en tâche de fond, à un **intervalle configurable**.
+cache). Le **badge** (tâche de fond) **et la page ouverte** (popup/dashboard) se
+réactualisent automatiquement à un **intervalle configurable**.
 
 ## Installation (mode développeur)
 
@@ -54,7 +55,7 @@ Pour recharger après modification : bouton ↻ sur la carte de l'extension dans
 ## Langue & réglages
 
 - **Langue** : anglais par défaut, bascule **EN/FR** via le bouton de langue (popup et dashboard).
-- **Auto-refresh du badge** : intervalle réglable (1 à 60 min) en bas du dashboard.
+- **Auto-refresh** : le badge **et** la page ouverte (popup/dashboard) se réactualisent à l'intervalle choisi (1 à 60 min, réglable en bas du dashboard).
 - **Dates de reset** : chaque plafond affiche la **date et l'heure** exactes de réinitialisation.
 
 ## Confidentialité

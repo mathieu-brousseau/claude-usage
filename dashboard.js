@@ -14,6 +14,7 @@ const SVGNS = "http://www.w3.org/2000/svg";
 let lang = "en";
 let t = makeT(lang);
 let latestAt = 0;
+let dataTimer = null;
 
 // ---------- helpers ----------
 function el(tag, cls, text) {
@@ -240,6 +241,12 @@ function refreshDynamic() {
   updated.textContent = latestAt ? `${t("updated")} ${fmtAgo(latestAt, lang)}` : "";
 }
 
+// Re-recupere les donnees a l'intervalle choisi (page laissee ouverte).
+function scheduleAutoRefresh(minutes) {
+  if (dataTimer) clearInterval(dataTimer);
+  dataTimer = setInterval(load, Math.max(1, minutes) * 60 * 1000);
+}
+
 function renderAuth() {
   app.replaceChildren();
   latestAt = 0;
@@ -305,11 +312,14 @@ async function init() {
     location.reload();
   });
   refreshBtn.addEventListener("click", () => location.reload());
-  intervalSel.addEventListener("change", () =>
-    setSetting("refreshMinutes", parseInt(intervalSel.value, 10))
-  );
+  intervalSel.addEventListener("change", () => {
+    const m = parseInt(intervalSel.value, 10);
+    setSetting("refreshMinutes", m);
+    scheduleAutoRefresh(m);
+  });
 
   setInterval(refreshDynamic, 1000);
+  scheduleAutoRefresh(s.refreshMinutes);
   load();
 }
 

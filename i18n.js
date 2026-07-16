@@ -104,21 +104,29 @@ export function money(v, currency, lang) {
   }
 }
 
-// Temps restant jusqu'au reset, en HH:MM (les heures peuvent depasser 24).
-// { expired: true } si deja passe, sinon { text: "HH:MM" }.
-export function countdownHHMM(iso) {
+// Temps restant jusqu'au reset. Les heures peuvent depasser 24.
+// withSeconds -> "HH:MM:SS", sinon "HH:MM". { expired: true } si deja passe.
+export function countdown(iso, withSeconds) {
   if (!iso) return null;
   const ms = new Date(iso).getTime() - Date.now();
   if (ms <= 0) return { expired: true };
-  const totalMin = Math.floor(ms / 60000);
+  const total = Math.floor(ms / 1000);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
   const p = (n) => String(n).padStart(2, "0");
-  return { expired: false, text: `${p(Math.floor(totalMin / 60))}:${p(totalMin % 60)}` };
+  const text = withSeconds ? `${p(h)}:${p(m)}:${p(s)}` : `${p(h)}:${p(m)}`;
+  return { expired: false, text };
 }
 
-// Date absolue locale au format YYYY/MM/DD HH:mm (pour le tooltip).
-export function fmtAbs(iso) {
+// Date absolue locale : "Weekday YYYY/MM/DD HH:mm" (pour le tooltip).
+export function fmtAbs(iso, lang) {
   if (!iso) return "";
   const d = new Date(iso);
   const p = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  let wd = "";
+  try {
+    wd = new Intl.DateTimeFormat(LOCALES[lang] || "en-CA", { weekday: "long" }).format(d) + " ";
+  } catch {}
+  return `${wd}${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }

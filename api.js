@@ -74,11 +74,11 @@ function spendMeter(spend, extra) {
     const el = spend.limit.exponent ?? 2;
     const used = spend.used.amount_minor / 10 ** eu;
     const limit = spend.limit.amount_minor / 10 ** el;
-    const pct =
-      spend.percent ??
-      (spend.limit.amount_minor
-        ? (spend.used.amount_minor / spend.limit.amount_minor) * 100
-        : 0);
+    // Precision reelle : on calcule depuis les montants exacts plutot que
+    // d'utiliser l'entier `percent` renvoye par l'API.
+    const pct = spend.limit.amount_minor
+      ? (spend.used.amount_minor / spend.limit.amount_minor) * 100
+      : spend.percent ?? 0;
     return { enabled: true, used, limit, currency: spend.used.currency || "USD", pct };
   }
   if (extra && extra.is_enabled) {

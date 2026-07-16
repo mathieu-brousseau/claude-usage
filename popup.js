@@ -1,5 +1,5 @@
 import { fetchAll, normalize, sevClass, AuthError } from "./api.js";
-import { makeT, fmtAgo, money, countdownHHMM, fmtAbs } from "./i18n.js";
+import { makeT, fmtAgo, money, countdown, fmtAbs } from "./i18n.js";
 import { getSettings, setSetting } from "./settings.js";
 
 const content = document.getElementById("content");
@@ -21,18 +21,19 @@ function el(tag, cls, text) {
   return n;
 }
 
-function countdownText(iso) {
-  const c = countdownHHMM(iso);
+function countdownText(iso, withSeconds) {
+  const c = countdown(iso, withSeconds);
   if (!c) return "";
   return c.expired ? t("resetNow") : `${t("resetsIn")} ${c.text}`;
 }
 
-// Span de compte a rebours : texte HH:MM, tooltip = date absolue, data-reset pour le tick.
-function resetSpan(iso) {
-  const span = el("span", null, countdownText(iso));
+// Span de compte a rebours ; tooltip = date absolue ; data-reset/data-seconds pour le tick.
+function resetSpan(iso, withSeconds) {
+  const span = el("span", null, countdownText(iso, withSeconds));
   if (iso) {
     span.dataset.reset = iso;
-    span.title = fmtAbs(iso);
+    if (withSeconds) span.dataset.seconds = "1";
+    span.title = fmtAbs(iso, lang);
   }
   return span;
 }
@@ -64,7 +65,7 @@ function orgRows(data) {
   const frag = document.createDocumentFragment();
   const { meters, spend } = normalize(data);
   for (const m of meters) {
-    frag.append(meterRow(t(m.key), `${Math.round(m.pct)}%`, m.pct, meterSub(resetSpan(m.resetsAt), "")));
+    frag.append(meterRow(t(m.key), `${Math.round(m.pct)}%`, m.pct, meterSub(resetSpan(m.resetsAt, m.key === "week"), "")));
   }
   if (spend.enabled) {
     frag.append(
@@ -72,7 +73,7 @@ function orgRows(data) {
         t("usageCredits"),
         `${money(spend.used, spend.currency, lang)} / ${money(spend.limit, spend.currency, lang)}`,
         spend.pct,
-        meterSub(el("span", null, `${spend.pct.toFixed(1)}%`), spend.currency)
+        meterSub(el("span", null, `${spend.pct.toFixed(2)}%`), spend.currency)
       )
     );
   }
@@ -98,7 +99,7 @@ function render(results) {
 
 function refreshDynamic() {
   for (const span of document.querySelectorAll("[data-reset]")) {
-    span.textContent = countdownText(span.dataset.reset);
+    span.textContent = countdownText(span.dataset.reset, span.dataset.seconds === "1");
   }
   footer.textContent = latestAt
     ? `${t("updated")} ${fmtAgo(latestAt, lang)}${orgCount > 1 ? ` · ${t("orgs", { n: orgCount })}` : ""}`

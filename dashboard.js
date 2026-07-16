@@ -1,5 +1,5 @@
 import { fetchAll, normalize, sevClass, AuthError } from "./api.js";
-import { makeT, fmtAgo, money, countdownHHMM, fmtAbs } from "./i18n.js";
+import { makeT, fmtAgo, money, countdown, fmtAbs } from "./i18n.js";
 import { getSettings, setSetting, REFRESH_OPTIONS, BADGE_SOURCES } from "./settings.js";
 
 const app = document.getElementById("app");
@@ -33,17 +33,18 @@ function svgEl(tag, attrs) {
 function sevFromName(s) {
   return s === "critical" ? "crit" : s === "warning" ? "warn" : "ok";
 }
-function countdownText(iso) {
-  const c = countdownHHMM(iso);
+function countdownText(iso, withSeconds) {
+  const c = countdown(iso, withSeconds);
   if (!c) return "";
   return c.expired ? t("resetNow") : `${t("resetsIn")} ${c.text}`;
 }
-// Span de compte a rebours : texte HH:MM, tooltip = date absolue, data-reset pour le tick.
-function resetSpan(iso) {
-  const span = el("span", null, countdownText(iso));
+// Span de compte a rebours ; tooltip = date absolue ; data-reset/data-seconds pour le tick.
+function resetSpan(iso, withSeconds) {
+  const span = el("span", null, countdownText(iso, withSeconds));
   if (iso) {
     span.dataset.reset = iso;
-    span.title = fmtAbs(iso);
+    if (withSeconds) span.dataset.seconds = "1";
+    span.title = fmtAbs(iso, lang);
   }
   return span;
 }
@@ -72,7 +73,7 @@ function gauge(spend) {
   if (spend.enabled) {
     center.append(el("div", "gauge-big", money(spend.used, spend.currency, lang)));
     center.append(el("div", "gauge-sub", `${t("of")} ${money(spend.limit, spend.currency, lang)}`));
-    center.append(el("div", "gauge-pct", `${spend.pct.toFixed(1)}% · ${spend.currency}`));
+    center.append(el("div", "gauge-pct", `${spend.pct.toFixed(2)}% · ${spend.currency}`));
   } else {
     center.append(el("div", "gauge-sub", t("notEnabled")));
   }
@@ -93,7 +94,7 @@ function meterRow(m) {
   track.append(fill);
   row.append(track);
   const sub = el("div", "meter-sub");
-  sub.append(resetSpan(m.resetsAt));
+  sub.append(resetSpan(m.resetsAt, m.key === "week"));
   sub.append(el("span", null, ""));
   row.append(sub);
   return row;
@@ -125,7 +126,7 @@ function limitCard(l) {
   active.append(el("span", `dot ${l.is_active ? "on" : "off"}`));
   active.append(document.createTextNode(l.is_active ? t("active") : t("inactive")));
   sub.append(active);
-  sub.append(resetSpan(l.resets_at));
+  sub.append(resetSpan(l.resets_at, !!(l.kind && l.kind.startsWith("weekly"))));
   card.append(sub);
   return card;
 }
@@ -238,7 +239,7 @@ function render(results) {
 
 function refreshDynamic() {
   for (const span of document.querySelectorAll("[data-reset]")) {
-    span.textContent = countdownText(span.dataset.reset);
+    span.textContent = countdownText(span.dataset.reset, span.dataset.seconds === "1");
   }
   updated.textContent = latestAt ? `${t("updated")} ${fmtAgo(latestAt, lang)}` : "";
 }

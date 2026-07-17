@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Claude Usage",
   "version": "1.0.0",
-  "description": "Affiche ta conso Claude (session 5 h, semaine, budget credits) depuis ta session claude.ai.",
+  "description": "Shows your Claude usage (5 h session, week, credit budget) from your claude.ai session.",
   "action": {
     "default_popup": "popup.html",
     "default_title": "Claude Usage",

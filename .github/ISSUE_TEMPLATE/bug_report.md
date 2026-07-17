@@ -1,30 +1,30 @@
 ---
-name: Rapport de bug
-about: Signaler un dysfonctionnement
+name: Bug report
+about: Report something not working
 title: "[Bug] "
 labels: bug
 ---
 
 ## Description
 
-<!-- Décris clairement le problème. -->
+<!-- Clearly describe the problem. -->
 
-## Étapes pour reproduire
+## Steps to reproduce
 
 1.
 2.
 3.
 
-## Comportement attendu
+## Expected behavior
 
-<!-- Ce qui aurait dû se passer. -->
+<!-- What should have happened. -->
 
-## Captures / console
+## Screenshots / console
 
-<!-- Copie l'erreur depuis « Inspecter les vues : service worker / popup ». -->
+<!-- Copy the error from "Inspect views: service worker / popup". -->
 
-## Environnement
+## Environment
 
-- Navigateur + version :
-- Version de l'extension :
-- Compte multi-organisation ? oui / non
+- Browser + version:
+- Extension version:
+- Multi-organization account? yes / no

@@ -1,78 +1,89 @@
-# Claude Usage — extension Chrome
+# Claude Usage — Chrome extension
 
-![Dashboard Claude Usage](docs/dashboard.png)
+![Claude Usage dashboard](docs/dashboard.png)
 
-Affiche ta consommation Claude directement dans Chrome :
+Shows your Claude consumption directly in Chrome:
 
-- **Session (5 h)** — % du plafond glissant sur 5 heures
-- **Semaine** — % du plafond hebdomadaire
-- **Crédits d'usage** — dépense vs plafond mensuel (ex. `$360.49 / $500.00 CAD`)
+- **Session (5 h)** — % of the rolling 5-hour cap
+- **Week** — % of the weekly cap
+- **Usage credits** — spend vs. monthly cap (e.g. `$360.49 / $500.00 CAD`)
 
-Un **badge** sur l'icône de la barre d'outils montre en permanence le pire pourcentage
-(vert < 75 %, ambre 75–90 %, rouge ≥ 90 %). Clique l'icône pour le popup.
+A **badge** on the toolbar icon permanently shows the worst percentage
+(green < 75%, amber 75–90%, red ≥ 90%). Click the icon for the popup.
 
-Le bouton **⤢** du popup ouvre un **dashboard plein écran** : jauge radiale du budget
-crédits et cartes détaillées pour chaque plafond (avec sévérité et reset).
+The popup's **⤢** button opens a **full-screen dashboard**: a radial gauge for the
+credit budget and detailed cards for each cap (with severity and reset).
 
-## Comment ça marche
+## How it works
 
-L'extension appelle l'API interne de claude.ai :
+The extension calls claude.ai's internal API:
 
 ```
 GET https://claude.ai/api/organizations/{orgId}/usage
 ```
 
-Comme la requête part **depuis ton navigateur**, ton **cookie de session claude.ai
-est envoyé automatiquement** (grâce à `host_permissions`). Aucun token, mot de passe
-ni cookie à copier-coller : il suffit d'être connecté à claude.ai dans Chrome.
+Because the request is sent **from your browser**, your **claude.ai session cookie is
+sent automatically** (thanks to `host_permissions`). No token, password or cookie to
+copy-paste: you just need to be logged in to claude.ai in Chrome.
 
-Toutes les **organisations** de ton compte sont détectées via `GET /api/organizations`,
-et l'usage est récupéré pour chacune — le dashboard affiche **un bloc par org**. Les
-données sont toujours lues **en direct** (le bouton ↻ recharge simplement la page, aucun
-cache). Le **badge** (tâche de fond) **et la page ouverte** (popup/dashboard) se
-réactualisent automatiquement à un **intervalle configurable**.
+All **organizations** on your account are detected via `GET /api/organizations`, and
+usage is fetched for each — the dashboard shows **one block per org**. Data is always
+read **live** (the ↻ button simply reloads the page, no cache). The **badge**
+(background task) **and the open page** (popup/dashboard) refresh automatically at a
+**configurable interval**.
 
-## Installation (mode développeur)
+## Installation (developer mode)
 
-1. Ouvre `chrome://extensions`
-2. Active **Mode développeur** (coin haut-droit)
-3. **Charger l'extension non empaquetée** → sélectionne le dossier `C:\sources\claude_usage`
-4. Épingle l'icône « Claude Usage » et connecte-toi à claude.ai si ce n'est pas déjà fait
+1. Open `chrome://extensions`
+2. Enable **Developer mode** (top-right corner)
+3. **Load unpacked** → select the folder where you cloned this repository
+4. Pin the "Claude Usage" icon and log in to claude.ai if you aren't already
 
-Pour recharger après modification : bouton ↻ sur la carte de l'extension dans `chrome://extensions`.
+To reload after changes: the ↻ button on the extension's card in `chrome://extensions`.
 
-## Fichiers
+## Files
 
-| Fichier | Rôle |
+| File | Role |
 |---|---|
-| `manifest.json` | Déclaration MV3, permissions, badge |
-| `api.js` | Appel API, cache, normalisation des données |
-| `popup.html` / `popup.css` / `popup.js` | Interface du popup |
-| `dashboard.html` / `dashboard.css` / `dashboard.js` | Dashboard plein écran (jauge, plafonds) |
-| `background.js` | Service worker : rafraîchit le badge toutes les 5 min |
-| `icons/` | Icônes générées |
+| `manifest.json` | MV3 declaration, permissions, badge |
+| `api.js` | API call, cache, data normalization |
+| `popup.html` / `popup.css` / `popup.js` | Popup UI |
+| `dashboard.html` / `dashboard.css` / `dashboard.js` | Full-screen dashboard (gauge, caps) |
+| `background.js` | Service worker: refreshes the badge every 5 min |
+| `icons/` | Generated icons |
 
-## Langue & réglages
+## Language & settings
 
-- **Langue** : anglais par défaut, bascule **EN/FR** via le bouton de langue (popup et dashboard).
-- **Auto-refresh** : le badge **et** la page ouverte (popup/dashboard) se réactualisent à l'intervalle choisi (1 à 60 min, réglable en bas du dashboard).
-- **Dates de reset** : chaque plafond affiche le **compte à rebours** `reset in HH:MM` (tooltip = date absolue `YYYY/MM/DD HH:mm`), qui tourne en direct.
-- **Badge** : choisis ce que montre l'icône — **session (défaut)**, pire plafond, semaine ou crédits — via le sélecteur en bas du dashboard.
+- **Language**: English by default, toggle **EN/FR** via the language button (popup and dashboard).
+- **Auto-refresh**: the badge **and** the open page (popup/dashboard) refresh at the chosen interval (1 to 60 min, adjustable at the bottom of the dashboard).
+- **Reset dates**: each cap shows the **countdown** `reset in HH:MM` (tooltip = absolute date `YYYY/MM/DD HH:mm`), updating live.
+- **Badge**: choose what the icon shows — **session (default)**, worst cap, week or credits — via the selector at the bottom of the dashboard.
 
-## Confidentialité
+## Privacy
 
-Aucune donnée ne quitte ta machine : l'extension parle uniquement à `claude.ai`
-(la même destination que l'appli). Rien n'est envoyé ailleurs, rien n'est journalisé.
+No data leaves your machine: the extension talks only to `claude.ai` (the same
+destination as the app). Nothing is sent elsewhere, nothing is logged. See
+[PRIVACY.md](PRIVACY.md) for details.
 
-## Limite connue
+## Known limitation
 
-L'endpoint `/usage` n'est **pas documenté** par Anthropic. Il peut changer ou disparaître
-à une mise à jour. Si l'affichage casse, vérifie la structure de la réponse dans
-`chrome://extensions` → *Inspecter les vues : service worker / popup*.
+The `/usage` endpoint is **not documented** by Anthropic. It may change or disappear in
+an update. If the display breaks, check the response structure in `chrome://extensions`
+→ *Inspect views: service worker / popup*.
 
-## Multi-organisation
+## Multi-organization
 
-Si ton compte appartient à plusieurs organisations (plusieurs équipes sur le même
-login), l'extension les affiche **toutes** — un bloc par org dans le dashboard, et le
-badge montre le pire pourcentage toutes orgs confondues. Un usage « perso » sur un
-**autre compte** n'apparaît pas ici : utilise un profil Chrome dédié pour cette session.
+If your account belongs to several organizations (multiple teams on the same login), the
+extension shows them **all** — one block per org in the dashboard, and the badge shows
+the worst percentage across all orgs. "Personal" usage on a **different account** does
+not appear here: use a dedicated Chrome profile for that session.
+
+## Contributing
+
+Contributions are welcome via Pull Requests from your fork — see
+[CONTRIBUTING.md](CONTRIBUTING.md). Please also read the
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
+## License
+
+[MIT](LICENSE) © 2026 Mathieu Brousseau

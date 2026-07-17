@@ -1,0 +1,80 @@
+name: Publish to Chrome Web Store
+
+# Publishing to the Chrome Web Store is NOT a GitHub operation. This workflow
+# packages the extension and uploads it to the store through Google's Chrome
+# Web Store API. It runs when a GitHub Release is published, or manually.
+#
+# Required repository secrets (Settings > Secrets and variables > Actions):
+#   CWS_EXTENSION_ID, CWS_CLIENT_ID, CWS_CLIENT_SECRET, CWS_REFRESH_TOKEN
+# One-time setup is documented in docs/PUBLISHING.md.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Auto-publish after upload (false = upload as draft only)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify secrets are configured
+        env:
+          CWS_EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+          CWS_CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CWS_CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+        run: |
+          missing=0
+          for s in CWS_EXTENSION_ID CWS_CLIENT_ID CWS_CLIENT_SECRET CWS_REFRESH_TOKEN; do
+            if [ -z "${!s}" ]; then echo "Missing secret: $s"; missing=1; fi
+          done
+          if [ "$missing" = "1" ]; then
+            echo "::error::Configure the Chrome Web Store secrets first (see docs/PUBLISHING.md)."
+            exit 1
+          fi
+
+      - name: Package extension
+        run: |
+          zip -r extension.zip . \
+            -x '.git/*' '.github/*' 'docs/*' '*.md' 'LICENSE' '.gitignore' 'extension.zip'
+          echo "Packaged contents:"
+          unzip -l extension.zip
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-zip
+          path: extension.zip
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Upload & publish to Chrome Web Store
+        env:
+          EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+          AUTO_PUBLISH: ${{ github.event_name == 'release' || inputs.publish }}
+        run: |
+          args="upload --source extension.zip"
+          if [ "$AUTO_PUBLISH" = "true" ]; then
+            args="$args --auto-publish"
+            echo "Uploading and auto-publishing."
+          else
+            echo "Uploading as draft (no auto-publish)."
+          fi
+          npx --yes -p chrome-webstore-upload-cli@3 chrome-webstore-upload $args

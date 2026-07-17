@@ -78,6 +78,11 @@ extension shows them **all** — one block per org in the dashboard, and the bad
 the worst percentage across all orgs. "Personal" usage on a **different account** does
 not appear here: use a dedicated Chrome profile for that session.
 
+## Publishing
+
+Releases are published to the Chrome Web Store automatically via GitHub Actions.
+See [docs/PUBLISHING.md](docs/PUBLISHING.md) for the one-time setup and the release process.
+
 ## Contributing
 
 Contributions are welcome via Pull Requests from your fork — see

@@ -1,0 +1,55 @@
+name: CI
+
+# Lightweight build/validation gate for pull requests: the extension has no
+# build step, so this validates the manifest, syntax-checks the JS, and proves
+# the extension packages cleanly. The "build" job is used as a required status
+# check on the main branch.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate manifest.json
+        run: |
+          node -e '
+            const fs = require("fs");
+            const m = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
+            for (const k of ["manifest_version", "name", "version"]) {
+              if (!(k in m)) throw new Error("manifest.json missing: " + k);
+            }
+            if (m.manifest_version !== 3) throw new Error("expected Manifest V3");
+            if (!/^\d+\.\d+\.\d+/.test(m.version)) throw new Error("bad version: " + m.version);
+            console.log("manifest.json OK — " + m.name + " v" + m.version);
+          '
+
+      - name: Syntax-check JavaScript (ES modules)
+        run: |
+          echo '{"type":"module"}' > package.json
+          for f in *.js; do node --check "$f" && echo "ok: $f"; done
+          rm -f package.json
+
+      - name: Package extension
+        run: |
+          zip -r extension.zip . \
+            -x '.git/*' '.github/*' 'docs/*' '*.md' 'LICENSE' '.gitignore' 'extension.zip' 'package.json'
+          unzip -l extension.zip
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-zip
+          path: extension.zip

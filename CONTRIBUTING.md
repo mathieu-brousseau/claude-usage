@@ -1,58 +1,58 @@
-# Contribuer à Claude Usage
+# Contributing to Claude Usage
 
-Merci de ton intérêt ! Les contributions se font **via des Pull Requests depuis ton
-propre fork** — personne n'a besoin d'un accès en écriture au dépôt.
+Thanks for your interest! Contributions happen **via Pull Requests from your own
+fork** — nobody needs write access to the repository.
 
 ## Workflow
 
-1. **Fork** le dépôt (bouton *Fork* en haut à droite sur GitHub).
-2. **Clone** ton fork :
+1. **Fork** the repository (the *Fork* button, top-right on GitHub).
+2. **Clone** your fork:
    ```bash
-   git clone https://github.com/<ton-compte>/claude-usage.git
+   git clone https://github.com/<your-account>/claude-usage.git
    cd claude-usage
    ```
-3. Crée une **branche** dédiée :
+3. Create a dedicated **branch**:
    ```bash
-   git checkout -b fix/mon-correctif
+   git checkout -b fix/my-change
    ```
-4. Fais tes modifications, teste-les (voir ci-dessous), puis commit :
+4. Make your changes, test them (see below), then commit:
    ```bash
-   git commit -m "Décris clairement le changement"
+   git commit -m "Clearly describe the change"
    ```
-5. **Push** sur ton fork et ouvre une **Pull Request** vers `main` de ce dépôt.
+5. **Push** to your fork and open a **Pull Request** against this repo's `main`.
 
-Garde de préférence tes commits ajoutés `upstream` à jour :
+Keep your branch up to date with `upstream`:
 ```bash
 git remote add upstream https://github.com/mathieu-brousseau/claude-usage.git
 git fetch upstream
 git rebase upstream/main
 ```
 
-## Tester tes changements
+## Testing your changes
 
-Il n'y a **aucune étape de build** — c'est du JavaScript vanilla (Manifest V3).
+There is **no build step** — it's vanilla JavaScript (Manifest V3).
 
-1. Ouvre `chrome://extensions`
-2. Active le **Mode développeur**
-3. **Charger l'extension non empaquetée** → sélectionne le dossier du dépôt
-4. Après chaque modification, clique sur ↻ sur la carte de l'extension pour la recharger
-5. Débogue via *Inspecter les vues : service worker / popup*
+1. Open `chrome://extensions`
+2. Enable **Developer mode**
+3. **Load unpacked** → select the repository folder
+4. After each change, click ↻ on the extension's card to reload it
+5. Debug via *Inspect views: service worker / popup*
 
-Vérifie que le popup, le dashboard et le badge fonctionnent, et teste si possible un
-compte **multi-organisation**.
+Check that the popup, dashboard and badge work, and if possible test a
+**multi-organization** account.
 
-## Bonnes pratiques pour une PR
+## Pull request guidelines
 
-- **Une PR = un sujet.** Les petites PR ciblées sont revues plus vite.
-- Respecte le style existant (JS vanilla, pas de dépendance de build, pas de framework).
-- Mets à jour le `README.md` si tu changes un comportement visible.
-- L'endpoint `GET /api/organizations/{orgId}/usage` n'est **pas documenté** par Anthropic :
-  s'il change, décris la nouvelle structure de réponse dans ta PR.
-- Sois clair dans la description : *quoi*, *pourquoi*, et *comment tester*.
+- **One PR = one topic.** Small, focused PRs are reviewed faster.
+- Match the existing style (vanilla JS, no build dependency, no framework).
+- Update `README.md` if you change visible behavior.
+- The `GET /api/organizations/{orgId}/usage` endpoint is **not documented** by Anthropic:
+  if it changes, describe the new response structure in your PR.
+- Be clear in the description: *what*, *why*, and *how to test*.
 
-## Signaler un bug ou proposer une idée
+## Reporting a bug or proposing an idea
 
-Ouvre une **issue** avec les modèles fournis avant de te lancer sur une grosse PR, pour
-qu'on valide l'approche ensemble.
+Open an **issue** using the provided templates before starting a large PR, so we can
+agree on the approach together.
 
-Toute contribution est publiée sous la licence [MIT](LICENSE) du projet.
+All contributions are published under the project's [MIT](LICENSE) license.

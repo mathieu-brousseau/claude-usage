@@ -1,33 +1,33 @@
-# Politique de sécurité
+# Security Policy
 
-## Modèle de sécurité
+## Security model
 
-Claude Usage est une extension Chrome (Manifest V3) qui :
+Claude Usage is a Chrome extension (Manifest V3) that:
 
-- communique **uniquement** avec `https://claude.ai` (déclaré dans `host_permissions`) ;
-- s'appuie sur le **cookie de session** déjà présent dans ton navigateur — aucun token,
-  mot de passe ni cookie n'est saisi, stocké de façon persistante, ni transmis ailleurs ;
-- ne journalise rien et n'envoie **aucune donnée** vers un serveur tiers.
+- communicates **only** with `https://claude.ai` (declared in `host_permissions`);
+- relies on the **session cookie** already present in your browser — no token,
+  password or cookie is entered, stored persistently, or transmitted elsewhere;
+- logs nothing and sends **no data** to any third-party server.
 
-Les seules permissions demandées sont `storage` (réglages locaux) et `alarms`
-(rafraîchissement périodique du badge).
+The only permissions requested are `storage` (local settings) and `alarms`
+(periodic badge refresh).
 
-## Signaler une vulnérabilité
+## Reporting a vulnerability
 
-Merci de **ne pas** ouvrir d'issue publique pour un problème de sécurité.
+Please **do not** open a public issue for a security problem.
 
-Utilise plutôt la fonction **« Report a vulnerability »** de l'onglet *Security* du dépôt
-GitHub (GitHub Security Advisories), qui permet un signalement privé.
+Instead, use the **"Report a vulnerability"** button in the repository's *Security* tab
+(GitHub Security Advisories), which allows private reporting.
 
-Merci d'inclure :
+Please include:
 
-- une description du problème et de son impact potentiel ;
-- les étapes pour le reproduire ;
-- la version du navigateur et de l'extension concernée.
+- a description of the issue and its potential impact;
+- steps to reproduce;
+- the browser and extension version affected.
 
-Nous nous efforçons d'accuser réception sous quelques jours et de corriger les problèmes
-confirmés dans un délai raisonnable.
+We aim to acknowledge reports within a few days and to fix confirmed issues within a
+reasonable timeframe.
 
-## Versions supportées
+## Supported versions
 
-Seule la dernière version publiée sur la branche `main` reçoit des correctifs de sécurité.
+Only the latest version published on the `main` branch receives security fixes.

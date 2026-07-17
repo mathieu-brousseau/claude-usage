@@ -1,26 +1,26 @@
-<!-- Merci pour ta contribution ! Remplis les sections ci-dessous. -->
+<!-- Thanks for your contribution! Please fill in the sections below. -->
 
 ## Description
 
-<!-- Quoi et pourquoi ? Lie l'issue concernée le cas échéant : Closes #123 -->
+<!-- What and why? Link the related issue if any: Closes #123 -->
 
-## Type de changement
+## Type of change
 
-- [ ] Correctif de bug
-- [ ] Nouvelle fonctionnalité
+- [ ] Bug fix
+- [ ] New feature
 - [ ] Documentation
-- [ ] Autre :
+- [ ] Other:
 
-## Comment tester
+## How to test
 
-<!-- Étapes pour vérifier le changement (extension chargée non empaquetée, popup/dashboard/badge). -->
+<!-- Steps to verify the change (extension loaded unpacked, popup/dashboard/badge). -->
 
 1.
 2.
 
 ## Checklist
 
-- [ ] J'ai testé en chargeant l'extension non empaquetée (`chrome://extensions`)
-- [ ] Le popup, le dashboard et le badge fonctionnent
-- [ ] J'ai mis à jour le `README.md` si un comportement visible change
-- [ ] Ma PR traite **un seul sujet**
+- [ ] I tested by loading the extension unpacked (`chrome://extensions`)
+- [ ] The popup, dashboard and badge work
+- [ ] I updated `README.md` if visible behavior changes
+- [ ] My PR addresses **a single topic**

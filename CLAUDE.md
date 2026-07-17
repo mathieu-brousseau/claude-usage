@@ -1,18 +1,19 @@
 # claude_usage
 
-Extension Chrome (Manifest V3) qui affiche la conso Claude (session 5 h, semaine,
-crédits $) dans le popup + un badge sur l'icône.
+Chrome extension (Manifest V3) that shows Claude consumption (5 h session, week,
+credit $) in the popup + a badge on the icon.
 
-## Points clés
-- Source unique : `GET https://claude.ai/api/organizations/{orgId}/usage`, authentifié
-  par le **cookie de session** du navigateur (pas de token OAuth — le Bearer CLI renvoie 403).
-- Multi-org : `getOrgs()` liste les orgs via `/api/organizations`, `fetchAll()` récupère
-  l'usage de chacune (cache par org). Le dashboard rend un bloc par org.
-- `api.js` centralise fetch + cache (5 min) + `normalize()`. Popup, dashboard et service worker s'en servent.
-- Schéma de réponse utile : `five_hour.utilization`, `seven_day.utilization`,
+## Key points
+- Single source: `GET https://claude.ai/api/organizations/{orgId}/usage`, authenticated
+  by the browser's **session cookie** (no OAuth token — the CLI Bearer returns 403).
+- Multi-org: `getOrgs()` lists orgs via `/api/organizations`, `fetchAll()` fetches each
+  org's usage (per-org cache). The dashboard renders one block per org.
+- `api.js` centralizes fetch + cache (5 min) + `normalize()`. Popup, dashboard and the
+  service worker all use it.
+- Useful response schema: `five_hour.utilization`, `seven_day.utilization`,
   `spend.used/limit.amount_minor` (+ `exponent`, `currency`), `extra_usage` (fallback).
-- Endpoint **non documenté** : si ça casse, ré-inspecter la réponse réelle.
+- **Undocumented** endpoint: if it breaks, re-inspect the real response.
 
 ## Dev
-- Pas de build. Charger non empaqueté via `chrome://extensions` (mode dev).
-- Recharger l'extension après chaque modif. Déboguer via « Inspecter les vues ».
+- No build. Load unpacked via `chrome://extensions` (dev mode).
+- Reload the extension after each change. Debug via "Inspect views".

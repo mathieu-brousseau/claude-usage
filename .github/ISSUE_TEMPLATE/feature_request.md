@@ -1,22 +1,22 @@
 ---
-name: Proposition de fonctionnalité
-about: Suggérer une idée ou une amélioration
-title: "[Idée] "
+name: Feature request
+about: Suggest an idea or improvement
+title: "[Idea] "
 labels: enhancement
 ---
 
-## Problème / besoin
+## Problem / need
 
-<!-- Quel manque ou quelle frustration motive cette idée ? -->
+<!-- What gap or frustration motivates this idea? -->
 
-## Solution proposée
+## Proposed solution
 
-<!-- Décris ce que tu aimerais voir. -->
+<!-- Describe what you'd like to see. -->
 
-## Alternatives envisagées
+## Alternatives considered
 
-<!-- Autres approches auxquelles tu as pensé. -->
+<!-- Other approaches you thought about. -->
 
-## Contexte additionnel
+## Additional context
 
-<!-- Maquettes, captures, liens... -->
+<!-- Mockups, screenshots, links... -->
